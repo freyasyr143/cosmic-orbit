@@ -94,7 +94,8 @@ function App() {
     const mass = selectedParts.reduce((sum, p) => sum + p.mass, 0);
     const cost = selectedParts.reduce((sum, p) => sum + p.cost, 0);
     const power = selectedParts.reduce((sum, p) => sum + p.power, 0);
-    return { mass, cost, power };
+    const science = selectedParts.reduce((sum, p) => sum + (p.sciencePoints || 0), 0);
+    return { mass, cost, power, science };
   }, [selectedParts]);
 
   const togglePart = (part: Part) => {
@@ -126,12 +127,17 @@ function App() {
     setEvents(results);
   };
 
+  const totalEventBonus = events.reduce((sum, e) => sum + e.bonusPoints, 0);
+  const remainingBudget = budget - totals.cost - (selectedRocket?.cost || 0);
+  const budgetBonus = Math.max(0, Math.round(remainingBudget / 10));
+  const finalScore = totals.science + totalEventBonus + budgetBonus;
+
   return (
     <div className="app">
       <header className="header">
         <h1>Mission Control: Cosmic Orbit</h1>
         <div className="budget">
-          Budget remaining: <strong>${budget - totals.cost - (selectedRocket?.cost || 0)}</strong>
+          Budget remaining: <strong>${remainingBudget}</strong>
         </div>
       </header>
 
@@ -174,6 +180,7 @@ function App() {
               <div className="meter">Mass: <strong>{totals.mass} kg</strong></div>
               <div className="meter">Power: <strong>{totals.power} W</strong></div>
               <div className="meter">Cost: <strong>${totals.cost}</strong></div>
+              <div className="meter">Science: <strong>+{totals.science}</strong></div>
             </div>
             <div className="parts-grid">
               {parts.map((part) => {
@@ -255,7 +262,56 @@ function App() {
         {phase === "report" && (
           <div>
             <h2>Mission Report</h2>
-            <p>Final score will appear here.</p>
+
+            {!selectedDestination ? (
+              <p>Complete the mission phases to generate a report.</p>
+            ) : (
+              <>
+                <div className="report-section">
+                  <h3>Mission Target</h3>
+                  <p><strong>{selectedDestination.name}</strong></p>
+                  <p>Required Δv: {selectedDestination.requiredDeltaV.toLocaleString()} m/s</p>
+                </div>
+
+                <div className="report-section">
+                  <h3>Spacecraft Configuration</h3>
+                  <p>Total Mass: {totals.mass} kg</p>
+                  <p>Total Power: {totals.power} W</p>
+                  <p>Parts Cost: ${totals.cost}</p>
+                  <p>Selected Parts: {selectedParts.map(p => p.name).join(", ") || "None"}</p>
+                </div>
+
+                {selectedRocket && (
+                  <div className="report-section">
+                    <h3>Launch Vehicle</h3>
+                    <p><strong>{selectedRocket.name}</strong></p>
+                    <p>Launch Cost: ${selectedRocket.cost.toLocaleString()}</p>
+                    {launchCheck && (
+                      <>
+                        <p>Available Δv: {launchCheck.availableDeltaV.toLocaleString()} m/s</p>
+                        <p className={launchCheck.canLaunch ? "success" : "fail"}>
+                          Launch Status: {launchCheck.canLaunch ? "Successful" : "Failed"}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                <div className="report-section">
+                  <h3>Operations Summary</h3>
+                  <p>Events survived: {events.filter(e => e.survived).length} / {events.length}</p>
+                  <p>Event bonus points: +{totalEventBonus}</p>
+                </div>
+
+                <div className="report-section score-box">
+                  <h3>Final Score</h3>
+                  <p>Science points: +{totals.science}</p>
+                  <p>Event bonuses: +{totalEventBonus}</p>
+                  <p>Budget efficiency bonus: +{budgetBonus}</p>
+                  <p className="final-score">Total: {finalScore}</p>
+                </div>
+              </>
+            )}
           </div>
         )}
       </main>
