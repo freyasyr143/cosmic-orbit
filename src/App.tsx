@@ -9,6 +9,8 @@ type Phase = "concept" | "design" | "launch" | "operations" | "report";
 interface Destination {
   name: string;
   requiredDeltaV: number;
+  difficulty: string;
+  eventCount: number;
 }
 
 interface Part {
@@ -84,7 +86,7 @@ function App() {
   const [selectedParts, setSelectedParts] = useState<Part[]>([]);
   const [selectedRocket, setSelectedRocket] = useState<Rocket | null>(null);
   const [events, setEvents] = useState<EventResult[]>([]);
-  const budget = 5000;
+  const budget = 200000;
 
   const destinations = destinationsData as Destination[];
   const parts = partsData as Part[];
@@ -120,11 +122,20 @@ function App() {
   }, [selectedRocket, selectedDestination, totals.mass]);
 
   const runEvents = () => {
+    if (!selectedDestination) return;
     const results: EventResult[] = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < selectedDestination.eventCount; i++) {
       results.push(simulateSpaceEvent(selectedParts, totals.power));
     }
     setEvents(results);
+  };
+
+  const startOver = () => {
+    setPhase("concept");
+    setSelectedDestination(null);
+    setSelectedParts([]);
+    setSelectedRocket(null);
+    setEvents([]);
   };
 
   const totalEventBonus = events.reduce((sum, e) => sum + e.bonusPoints, 0);
@@ -149,11 +160,15 @@ function App() {
         <button className={phase === "report" ? "active" : ""} onClick={() => setPhase("report")}>Mission Report</button>
       </nav>
 
+      <div style={{ textAlign: "right", marginBottom: "16px" }}>
+        <button className="start-over" onClick={startOver}>Start Over</button>
+      </div>
+
       <main className="content">
         {phase === "concept" && (
           <div>
             <h2>Phase 1 — Concept</h2>
-            <p>Choose your target destination.</p>
+            <p>Choose your target destination. Harder targets have more events.</p>
             <div className="destination-grid">
               {destinations.map((dest) => (
                 <button
@@ -163,6 +178,7 @@ function App() {
                 >
                   <h3>{dest.name}</h3>
                   <p>Required Δv: {dest.requiredDeltaV.toLocaleString()} m/s</p>
+                  <p>Difficulty: {dest.difficulty} ({dest.eventCount} events)</p>
                 </button>
               ))}
             </div>
@@ -241,19 +257,73 @@ function App() {
           <div>
             <h2>Phase 4 — Operations</h2>
             <p>Run the mission and face random events.</p>
-            <button className="run-button" onClick={runEvents}>
+            {selectedDestination && (
+              <p>This target has {selectedDestination.eventCount} events ({selectedDestination.difficulty}).</p>
+            )}
+            <button className="run-button" onClick={runEvents} disabled={!selectedDestination}>
               Run Mission Events
             </button>
 
             {events.length > 0 && (
-              <div className="events-list">
-                {events.map((event, index) => (
-                  <div key={index} className={`event-card ${event.survived ? "survived" : "failed"}`}>
-                    <h4>{event.eventName}</h4>
-                    <p>{event.description}</p>
-                    <p>{event.survived ? `+${event.bonusPoints} points` : "No bonus"}</p>
+              <div className="mission-visual">
+                <div className="mission-playthrough">
+                  <div className="stars"></div>
+                  <div className="spacecraft-main">🛰️</div>
+                  {events.map((event, i) => (
+                    <div
+                      key={i}
+                      className="obstacle"
+                      style={{
+                        top: `${20 + i * 25}%`,
+                        animationDelay: `${i * 1.5}s`,
+                      }}
+                    >
+                      {event.eventName.includes("Solar") ? "☀️" : event.eventName.includes("Micrometeoroid") ? "☄️" : "📡"}
+                    </div>
+                  ))}
+                  <div className="event-overlay">
+                    {events[events.length - 1]?.eventName}: {events[events.length - 1]?.survived ? "Survived" : "Impact"}
                   </div>
-                ))}
+                </div>
+
+                <div className="spacecraft-status">
+                  <div className="spacecraft-icon">🛰️</div>
+                  <div className="status-bars">
+                    <div className="status-item">
+                      <span>Power</span>
+                      <div className="bar">
+                        <div
+                          className="bar-fill power"
+                          style={{ width: `${Math.min(100, Math.max(0, (totals.power + 100) / 2))}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="status-item">
+                      <span>Integrity</span>
+                      <div className="bar">
+                        <div
+                          className="bar-fill integrity"
+                          style={{ width: `${Math.max(20, 100 - events.filter((e) => !e.survived).length * 15)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="events-timeline">
+                  {events.map((event, index) => (
+                    <div key={index} className={`timeline-event ${event.survived ? "survived" : "failed"}`}>
+                      <div className="timeline-dot" />
+                      <div className="timeline-content">
+                        <h4>{event.eventName}</h4>
+                        <p>{event.description}</p>
+                        <span className="result-badge">
+                          {event.survived ? `SUCCESS +${event.bonusPoints}` : "FAILED"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -262,6 +332,12 @@ function App() {
         {phase === "report" && (
           <div>
             <h2>Mission Report</h2>
+            <div className="advisor">
+              <div className="advisor-icon">🐕‍🦺</div>
+              <div className="advisor-text">
+                Advisor Laika: “Good work, Commander. Here’s your debrief.”
+              </div>
+            </div>
 
             {!selectedDestination ? (
               <p>Complete the mission phases to generate a report.</p>
@@ -269,8 +345,9 @@ function App() {
               <>
                 <div className="report-section">
                   <h3>Mission Target</h3>
-                  <p><strong>{selectedDestination.name}</strong></p>
+                  <p><strong>{selectedDestination.name}</strong> — {selectedDestination.difficulty}</p>
                   <p>Required Δv: {selectedDestination.requiredDeltaV.toLocaleString()} m/s</p>
+                  <p>Events faced: {selectedDestination.eventCount}</p>
                 </div>
 
                 <div className="report-section">
@@ -278,7 +355,7 @@ function App() {
                   <p>Total Mass: {totals.mass} kg</p>
                   <p>Total Power: {totals.power} W</p>
                   <p>Parts Cost: ${totals.cost}</p>
-                  <p>Selected Parts: {selectedParts.map(p => p.name).join(", ") || "None"}</p>
+                  <p>Selected Parts: {selectedParts.map((p) => p.name).join(", ") || "None"}</p>
                 </div>
 
                 {selectedRocket && (
@@ -299,8 +376,26 @@ function App() {
 
                 <div className="report-section">
                   <h3>Operations Summary</h3>
-                  <p>Events survived: {events.filter(e => e.survived).length} / {events.length}</p>
+                  <p>Events survived: {events.filter((e) => e.survived).length} / {events.length}</p>
                   <p>Event bonus points: +{totalEventBonus}</p>
+                </div>
+
+                <div className="report-section">
+                  <h3>Why This Happened (Trade-offs)</h3>
+                  <ul style={{ paddingLeft: "20px", color: "#e7ecef" }}>
+                    {totals.power < 0 && <li>Negative power made the spacecraft more vulnerable to solar flares and system outages.</li>}
+                    {totals.power >= 50 && <li>Good power margin helped the spacecraft survive solar events.</li>}
+                    {selectedParts.some(p => p.name.includes("Antenna"))
+                      ? <li>Having an antenna improved communications and helped survive signal interference.</li>
+                      : <li>Missing a strong antenna increased the chance of losing data during interference.</li>}
+                    {selectedParts.some(p => p.name.includes("Propulsion") || p.name.includes("Thruster"))
+                      ? <li>Propulsion or thrusters helped avoid micrometeoroid impacts.</li>
+                      : <li>Limited maneuvering ability made the spacecraft more vulnerable to micrometeoroids.</li>}
+                    {launchCheck && !launchCheck.massOk && <li>The spacecraft was too heavy for the chosen rocket, which blocked a successful launch.</li>}
+                    {launchCheck && !launchCheck.deltaVOk && <li>Not enough delta-v for the chosen destination. A lighter spacecraft or more powerful rocket would help.</li>}
+                    {remainingBudget < 0 && <li>The mission went over budget. Reducing instrument cost or choosing a cheaper rocket would improve efficiency.</li>}
+                    {totals.science > 100 && <li>High science instrument value increased the final score.</li>}
+                  </ul>
                 </div>
 
                 <div className="report-section score-box">

@@ -5,7 +5,7 @@
     "fuelMass": 450000,
     "exhaustVelocity": 3200,
     "maxPayLoadMass": 18850,
-    "cost": 153000
+    "cost": 15000
   },
   {
     "name": "Falcon 9",
@@ -13,7 +13,7 @@
     "fuelMass": 395000,
     "exhaustVelocity": 3100,
     "maxPayLoadMass": 22800,
-    "cost": 74000
+    "cost": 8000
   },
   {
     "name": "Titan IVB / Centaur",
@@ -21,7 +21,7 @@
     "fuelMass": 700000,
     "exhaustVelocity": 3000,
     "maxPayLoadMass": 21680,
-    "cost": 250000
+    "cost": 25000
   },
   {
     "name": "SLS Block 1B",
@@ -29,6 +29,6 @@
     "fuelMass": 2500000,
     "exhaustVelocity": 3400,
     "maxPayLoadMass": 105000,
-    "cost": 2500000
+    "cost": 80000
   }
 ]
