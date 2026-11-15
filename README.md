@@ -94,3 +94,19 @@ npm install
 
 npm run dev
 
+## 🔬 How the Simulation Works (Science & Math)
+
+**CosmicOrbit** uses a deterministic physics and engineering simulation module (written in TypeScript) to evaluate spacecraft designs against real orbital mechanics constraints:
+
+1. **Spacecraft Mass & Payload Budget:**
+   - $m_{\text{payload}} = \sum m_i$ (must not exceed launch vehicle capacity).
+   - Wet Mass ($m_0$) = Dry Mass ($m_f$) + Propellant Mass.
+
+2. **Orbital Mechanics ($\Delta v$):**
+   - Computed using the **Tsiolkovsky Rocket Equation**:
+     $$\Delta v = v_e \cdot \ln\left(\frac{m_0}{m_f}\right)$$
+   - A mission is cleared only if $\Delta v_{\text{achieved}} \ge \Delta v_{\text{required}}$.
+
+3. **Power Margin & Space Events:**
+   - $P_{\text{net}} = \sum P_{\text{generated}} - \sum P_{\text{consumed}}$
+   - Dynamic space events (solar flares, radiation) test subsystem resilience during operations.
