@@ -28,6 +28,13 @@ interface Rocket {
   cost: number;
 }
 
+interface EventResult {
+  eventName: string;
+  description: string;
+  survived: boolean;
+  bonusPoints: number;
+}
+
 function calculateDeltaV(rocket: Rocket, spacecraftMass: number): number {
   const initialMass = rocket.dryMass + rocket.fuelMass + spacecraftMass;
   const finalMass = rocket.dryMass + spacecraftMass;
@@ -35,11 +42,48 @@ function calculateDeltaV(rocket: Rocket, spacecraftMass: number): number {
   return rocket.exhaustVelocity * Math.log(initialMass / finalMass);
 }
 
+function simulateSpaceEvent(parts: Part[], totalPower: number): EventResult {
+  const events = [
+    {
+      name: "Solar Flare",
+      description: "A strong solar explosion hits the spacecraft's electrical systems!",
+      checkSurvival: () => totalPower >= 50,
+      successMsg: "Energy surplus and batteries protected the systems.",
+      failMsg: "Weak power reserve caused a temporary outage.",
+    },
+    {
+      name: "Micrometeoroid Shower",
+      description: "A cloud of tiny space rocks is blocking the path!",
+      checkSurvival: () => parts.some((p) => p.name.includes("Thruster") || p.name.includes("Shield") || p.name.includes("Propulsion")),
+      successMsg: "Maneuvering systems allowed the spacecraft to avoid danger.",
+      failMsg: "Some impacts damaged the structure.",
+    },
+    {
+      name: "Signal Interference",
+      description: "Cosmic interference is blocking communication with Earth!",
+      checkSurvival: () => parts.some((p) => p.name.includes("Antenna")),
+      successMsg: "Antenna kept the link with mission control.",
+      failMsg: "Some data was lost due to poor connection.",
+    },
+  ];
+
+  const chosen = events[Math.floor(Math.random() * events.length)];
+  const survived = chosen.checkSurvival();
+
+  return {
+    eventName: chosen.name,
+    description: chosen.description + " " + (survived ? chosen.successMsg : chosen.failMsg),
+    survived,
+    bonusPoints: survived ? 250 : 0,
+  };
+}
+
 function App() {
   const [phase, setPhase] = useState<Phase>("concept");
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [selectedParts, setSelectedParts] = useState<Part[]>([]);
   const [selectedRocket, setSelectedRocket] = useState<Rocket | null>(null);
+  const [events, setEvents] = useState<EventResult[]>([]);
   const budget = 5000;
 
   const destinations = destinationsData as Destination[];
@@ -73,6 +117,14 @@ function App() {
       canLaunch: massOk && deltaVOk,
     };
   }, [selectedRocket, selectedDestination, totals.mass]);
+
+  const runEvents = () => {
+    const results: EventResult[] = [];
+    for (let i = 0; i < 5; i++) {
+      results.push(simulateSpaceEvent(selectedParts, totals.power));
+    }
+    setEvents(results);
+  };
 
   return (
     <div className="app">
@@ -181,7 +233,22 @@ function App() {
         {phase === "operations" && (
           <div>
             <h2>Phase 4 — Operations</h2>
-            <p>Events will appear here.</p>
+            <p>Run the mission and face random events.</p>
+            <button className="run-button" onClick={runEvents}>
+              Run Mission Events
+            </button>
+
+            {events.length > 0 && (
+              <div className="events-list">
+                {events.map((event, index) => (
+                  <div key={index} className={`event-card ${event.survived ? "survived" : "failed"}`}>
+                    <h4>{event.eventName}</h4>
+                    <p>{event.description}</p>
+                    <p>{event.survived ? `+${event.bonusPoints} points` : "No bonus"}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
