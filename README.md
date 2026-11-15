@@ -88,15 +88,15 @@ Click \*\*Start Over\*\* at any time to begin a new mission.
 
 
 
+
+## Running Locally
+
 ```bash
-
 npm install
-
 npm run dev
+```
 
-
-
-## 🔬 How the Simulation Works (Science & Math)
+##  How the Simulation Works (Science & Math)
 
 **CosmicOrbit** uses a deterministic physics and engineering simulation module (written in TypeScript) to evaluate spacecraft designs against real orbital mechanics constraints:
 
