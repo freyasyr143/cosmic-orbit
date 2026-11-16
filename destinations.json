@@ -1,0 +1,59 @@
+
+{
+  "destinations": [
+    {
+      "name": "Mars",
+      "gravity": 3.73,
+      "pressure": 0.61,
+      "temperature": -60,
+      "atmosphere": "CO2-dominated thin atmosphere",
+      "profiles": ["orbiter", "lander", "rover"],
+      "hazards": [
+        "Speed and friction at landing",
+        "Dust",
+        "Extreme weather conditions",
+        "Electronic wearing due to radiation"
+      ]
+    },
+    {
+      "name": "Venus",
+      "gravity": 8.87,
+      "pressure": 9300,
+      "temperature": 464,
+      "atmosphere": "Mostly CO2, 92 bar, layer of clouds mainly composed of sulphuric acid",
+      "profiles": ["orbiter", "short-lived lander"],
+      "hazards": [
+        "Extreme temperatures",
+        "Component corrosion",
+        "Harsh terrain conditions"
+      ]
+    },
+    {
+      "name": "Jupiter",
+      "gravity": 24.79,
+      "pressure": 100,
+      "temperature": -110,
+      "atmosphere": "Mainly composed of H2/He, high speed zonal winds",
+      "profiles": ["orbiter", "flyby", "probe"],
+      "hazards": [
+        "High radiation belts",
+        "Massive gravitational pull",
+        "High-velocity dust",
+        "Communication delays"
+      ]
+    },
+    {
+      "name": "Saturn (Titan)",
+      "gravity": 1.352,
+      "pressure": "146-150",
+      "temperature": -179.2,
+      "atmosphere": "Mainly composed of nitrogen",
+      "profiles": ["orbiter", "rotorcraft", "atmospheric probe"],
+      "hazards": [
+        "Planetary protection hazards",
+        "Extreme cold (heavy insulation required)",
+        "Power limitations"
+      ]
+    }
+  ]
+}
